@@ -6,7 +6,7 @@
 <title>스포츠 OX 퀴즈</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,'Pretendard',sans-serif;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);min-height:100vh;color:#fff;overflow-x:hidden;}
+body{font-family:-apple-system,'Pretendard',sans-serif;background:linear-gradient(135deg,#c084fc,#818cf8,#f472b6);min-height:100vh;color:#fff;overflow-x:hidden;}
 .screen{display:none;min-height:100vh;}
 .screen.active{display:flex;flex-direction:column;}
 .center{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:20px;text-align:center;}
@@ -17,7 +17,7 @@ body{font-family:-apple-system,'Pretendard',sans-serif;background:linear-gradien
 .btn-pri{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;box-shadow:0 4px 18px rgba(102,126,234,.45);}
 .btn-ghost{background:transparent;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.15);}
 .btn-danger{background:linear-gradient(135deg,#ff416c,#ff4b2b);color:#fff;}
-.card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:28px;width:100%;max-width:460px;backdrop-filter:blur(10px);}
+.card{background:rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.45);border-radius:20px;padding:28px;width:100%;max-width:460px;backdrop-filter:blur(10px);}
 .inp{width:100%;padding:13px 20px;border:2px solid rgba(255,255,255,.2);border-radius:50px;background:rgba(255,255,255,.08);color:#fff;font-size:1rem;outline:none;transition:border-color .2s;}
 .inp:focus{border-color:#f093fb;}
 .inp::placeholder{color:rgba(255,255,255,.3);}
@@ -37,7 +37,7 @@ label{display:block;color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:7
 .cnt-btn.sel{border-color:#f093fb;background:rgba(240,147,251,.18);}
 
 .room-code{font-size:4.5rem;font-weight:900;letter-spacing:.18em;background:linear-gradient(90deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.room-box{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:20px 28px;text-align:center;margin:14px 0;width:100%;max-width:420px;}
+.room-box{background:rgba(255,255,255,.28);border:1px solid rgba(255,255,255,.45);border-radius:16px;padding:20px 28px;text-align:center;margin:14px 0;width:100%;max-width:420px;}
 .player-list{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;justify-content:center;min-height:50px;width:100%;max-width:560px;}
 .p-chip{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border-radius:50px;padding:5px 14px;font-size:.88rem;}
 
@@ -51,13 +51,13 @@ label{display:block;color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:7
 .ans-cnt{color:rgba(255,255,255,.5);font-size:.88rem;text-align:right;}
 .prog{width:100%;height:7px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;margin-bottom:14px;}
 .prog-fill{height:100%;background:linear-gradient(90deg,#f093fb,#f5576c);border-radius:4px;transition:width .6s;}
-.q-text{font-size:1.75rem;font-weight:700;text-align:center;line-height:1.4;padding:22px;background:rgba(255,255,255,.07);border-radius:16px;margin-bottom:14px;}
+.q-text{font-size:1.75rem;font-weight:700;text-align:center;line-height:1.4;padding:22px;background:rgba(255,255,255,.28);border-radius:16px;margin-bottom:14px;}
 
 /* ★ 미니미 필드 — absolute 배치 */
 .field{position:relative;width:100%;height:260px;border-radius:18px;overflow:hidden;margin-bottom:12px;}
 .field-bg{position:absolute;inset:0;display:flex;pointer-events:none;}
-.fo-bg{flex:1;background:rgba(76,175,80,.13);border:2px solid rgba(76,175,80,.35);border-radius:18px 0 0 18px;}
-.fx-bg{flex:1;background:rgba(244,67,54,.13);border:2px solid rgba(244,67,54,.35);border-radius:0 18px 18px 0;}
+.fo-bg{flex:1;background:rgba(76,175,80,.22);border:2px solid rgba(76,175,80,.5);border-radius:18px 0 0 18px;}
+.fx-bg{flex:1;background:rgba(244,67,54,.22);border:2px solid rgba(244,67,54,.5);border-radius:0 18px 18px 0;}
 .f-label{position:absolute;top:8px;font-size:3rem;font-weight:900;opacity:.5;pointer-events:none;}
 .f-label-o{left:8%;color:#4CAF50;}
 .f-label-x{right:8%;color:#f44336;}
@@ -104,7 +104,7 @@ label{display:block;color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:7
 .pd2{height:88px;background:linear-gradient(135deg,#c0c0c0,#9e9e9e);}
 .pd3{height:68px;background:linear-gradient(135deg,#cd7f32,#a0522d);}
 .stats{width:100%;max-width:580px;display:flex;flex-direction:column;gap:7px;}
-.st-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.07);border-radius:12px;padding:11px 15px;}
+.st-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.28);border-radius:12px;padding:11px 15px;}
 .st-rank{font-size:1.1rem;font-weight:900;min-width:28px;}
 .st-av{font-size:1.4rem;}
 .st-name{flex:1;font-weight:700;font-size:.95rem;text-align:left;}
@@ -121,7 +121,7 @@ label{display:block;color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:7
 .av-opt:hover{transform:scale(1.12);}
 
 .pg-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:20px;gap:12px;}
-.p-q{font-size:1.4rem;font-weight:700;text-align:center;line-height:1.45;padding:20px;background:rgba(255,255,255,.07);border-radius:16px;width:100%;max-width:480px;}
+.p-q{font-size:1.4rem;font-weight:700;text-align:center;line-height:1.45;padding:20px;background:rgba(255,255,255,.28);border-radius:16px;width:100%;max-width:480px;}
 .ox-row{display:flex;gap:20px;justify-content:center;}
 .p-sel-info{font-size:1rem;color:rgba(255,255,255,.55);min-height:24px;}
 .rev-ok{color:#4CAF50;font-size:1.2rem;font-weight:700;}
@@ -134,7 +134,7 @@ label{display:block;color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:7
 
 /* 초기화 확인 모달 */
 .confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:500;display:none;}
-.confirm-box{background:#1e1b3a;border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:28px;text-align:center;max-width:320px;width:90%;}
+.confirm-box{background:rgba(140,80,220,.95);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:28px;text-align:center;max-width:320px;width:90%;}
 .confirm-box h3{font-size:1.2rem;margin-bottom:10px;}
 .confirm-box p{color:rgba(255,255,255,.55);font-size:.9rem;margin-bottom:20px;}
 .confirm-btns{display:flex;gap:10px;justify-content:center;}
