@@ -64,6 +64,9 @@ label{display:block;color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:7
 /* 중앙선 */
 .field-center-line{position:absolute;left:50%;top:10%;bottom:10%;width:2px;background:rgba(255,255,255,.12);transform:translateX(-50%);pointer-events:none;}
 #miniContainer{position:absolute;inset:0;}
+/* 미선택 대기줄 */
+#pendingRow{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;min-height:36px;padding:5px 0;margin-bottom:4px;}
+#pendingRow .mc{position:static;transform:none;opacity:.38;transition:opacity .3s;}
 
 /* ★ 미니미 캐릭터 */
 .mc{
@@ -231,6 +234,9 @@ label{display:block;color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:7
     <div class="field-center-line"></div>
     <div id="miniContainer"></div>
   </div>
+
+  <!-- 미선택 대기줄 -->
+  <div id="pendingRow"></div>
 
   <!-- 정답 공개 배너 -->
   <div id="revealBanner" style="display:none;text-align:center;padding:14px 20px;margin-bottom:10px;border-radius:16px;border:3px solid;"></div>
@@ -597,36 +603,46 @@ function getMiniPosition(pid, answer){
 
 // ─── 미니미 DOM 관리 ───
 function initMiniDom(players){
-  const container=$('miniContainer');
-  container.innerHTML='';
+  $('miniContainer').innerHTML='';
+  $('pendingRow').innerHTML='';
   Object.entries(players).forEach(([pid,p])=>{
     const el=document.createElement('div');
     el.className='mc';
     el.id='mc-'+pid;
     el.innerHTML=`<div class="em">${AV[p.avatar]}</div><div class="mn">${p.name}</div>`;
-    // 초기 위치: 중앙 대기
-    const pos=getMiniPosition(pid, null);
-    el.style.left=pos.left;
-    el.style.top=pos.top;
-    container.appendChild(el);
+    $('pendingRow').appendChild(el); // 답 선택 전엔 아래 대기줄
   });
   prevAnswers={};
 }
 
 function updateMiniPositions(players, qIdx, revealed, correctBool){
   if(!players)return;
+  const fieldCont=$('miniContainer');
+  const pendCont=$('pendingRow');
   Object.entries(players).forEach(([pid,p])=>{
     const el=document.getElementById('mc-'+pid);
     if(!el)return;
     const ans=p.answers&&p.answers[qIdx]!==undefined?p.answers[qIdx]:null;
-    const pos=getMiniPosition(pid, ans);
-    el.style.left=pos.left;
-    el.style.top=pos.top;
+
+    if(ans===null){
+      // 미선택 → 대기줄
+      if(el.parentElement!==pendCont){
+        el.style.left='';el.style.top='';
+        pendCont.appendChild(el);
+      }
+    } else {
+      // 선택 완료 → 필드로 이동
+      if(el.parentElement!==fieldCont){
+        fieldCont.appendChild(el);
+      }
+      const pos=getMiniPosition(pid, ans);
+      el.style.left=pos.left;
+      el.style.top=pos.top;
+    }
 
     // 변경 감지 → 노란 점 표시
     const prev=prevAnswers[pid];
     if(prev!==ans && ans!==null && prev!==undefined){
-      // 기존 dot 제거
       const oldDot=el.querySelector('.changed-dot');
       if(oldDot)oldDot.remove();
       const dot=document.createElement('div');
@@ -639,7 +655,7 @@ function updateMiniPositions(players, qIdx, revealed, correctBool){
     // 정답 공개 시 애니메이션
     if(revealed){
       const ca=correctBool?'O':'X';
-      el.classList.toggle('cel', ans===ca);
+      el.classList.toggle('cel', ans!==null && ans===ca);
       el.classList.toggle('out', ans!==null && ans!==ca);
     } else {
       el.classList.remove('cel','out');
@@ -767,6 +783,7 @@ window.revealAnswer=async()=>{
 window.nextQuestion=async()=>{
   stopSparkles();
   $('miniContainer').innerHTML='';
+  $('pendingRow').innerHTML='';
   const snap=await get(ref(db,`rooms/${roomCode}`));
   const d=snap.val();
   const next=d.currentQ+1;
