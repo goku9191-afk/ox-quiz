@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>스포츠 OX 퀴즈</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--o:#4CAF50;--x:#f44336;}
+body{font-family:-apple-system,'Pretendard',sans-serif;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);min-height:100vh;color:#fff;overflow-x:hidden;}
+.screen{display:none;min-height:100vh;}
+.screen.active{display:flex;flex-direction:column;}
+.center{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:20px;text-align:center;}
+.title{font-size:2.4rem;font-weight:900;background:linear-gradient(90deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;}
+.sub{color:rgba(255,255,255,.55);margin-bottom:24px;font-size:.95rem;}
+.btn{padding:13px 30px;border:none;border-radius:50px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .18s;}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.12);}
+.btn-pri{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;box-shadow:0 4px 18px rgba(102,126,234,.45);}
+.btn-ghost{background:transparent;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.15);}
+.card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:28px;width:100%;max-width:460px;backdrop-filter:blur(10px);}
+.inp{width:100%;padding:13px 20px;border:2px solid rgba(255,255,255,.2);border-radius:50px;background:rgba(255,255,255,.08);color:#fff;font-size:1rem;outline:none;transition:border-color .2s;}
+.inp:focus{border-color:#f093fb;}
+.inp::placeholder{color:rgba(255,255,255,.3);}
+label{display:block;color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:7px;text-align:left;}
+
+/* 모드 선택 */
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;width:100%;max-width:400px;}
+.mode-btn{padding:36px 16px;border:2px solid rgba(255,255,255,.18);border-radius:20px;background:rgba(255,255,255,.05);color:#fff;cursor:pointer;font-size:.95rem;font-weight:700;transition:all .2s;}
+.mode-btn:hover{border-color:#f093fb;background:rgba(240,147,251,.12);transform:translateY(-4px);}
+.mode-icon{font-size:2.8rem;display:block;margin-bottom:10px;}
+
+/* 스포츠 선택 */
+.sport-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0;width:100%;max-width:420px;}
+.sp-btn{padding:18px 8px;border:2px solid rgba(255,255,255,.18);border-radius:14px;background:rgba(255,255,255,.05);color:#fff;cursor:pointer;font-size:.85rem;font-weight:700;transition:all .18s;}
+.sp-btn .sp-em{font-size:1.9rem;display:block;margin-bottom:5px;}
+.sp-btn.sel{border-color:#f093fb;background:rgba(240,147,251,.18);}
+
+/* 문제수 */
+.cnt-grid{display:flex;gap:10px;justify-content:center;margin:14px 0;}
+.cnt-btn{padding:12px 22px;border:2px solid rgba(255,255,255,.18);border-radius:50px;background:rgba(255,255,255,.05);color:#fff;cursor:pointer;font-size:1rem;font-weight:700;transition:all .18s;}
+.cnt-btn.sel{border-color:#f093fb;background:rgba(240,147,251,.18);}
+
+/* 대기실 */
+.room-code{font-size:4.5rem;font-weight:900;letter-spacing:.18em;background:linear-gradient(90deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.room-box{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:20px 28px;text-align:center;margin:14px 0;width:100%;max-width:420px;}
+.player-list{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;justify-content:center;min-height:50px;width:100%;max-width:560px;}
+.p-chip{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border-radius:50px;padding:5px 14px;font-size:.88rem;}
+
+/* 게임 화면 (선생님) */
+#hostGame{padding:16px;max-width:940px;margin:0 auto;width:100%;}
+.hg-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.q-info{color:rgba(255,255,255,.5);font-size:.88rem;}
+.timer{font-size:4rem;font-weight:900;line-height:1;min-width:80px;text-align:center;}
+.timer.urg{color:#ff4b2b;animation:pulse .45s ease infinite alternate;}
+@keyframes pulse{to{transform:scale(1.12);}}
+.ans-cnt{color:rgba(255,255,255,.5);font-size:.88rem;text-align:right;}
+.prog{width:100%;height:7px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;margin-bottom:14px;}
+.prog-fill{height:100%;background:linear-gradient(90deg,#f093fb,#f5576c);border-radius:4px;transition:width .5s;}
+.q-text{font-size:1.75rem;font-weight:700;text-align:center;line-height:1.4;padding:22px;background:rgba(255,255,255,.07);border-radius:16px;margin-bottom:14px;}
+
+/* 필드 */
+.field{display:flex;width:100%;height:260px;border-radius:18px;overflow:hidden;margin-bottom:12px;}
+.fside{flex:1;position:relative;display:flex;flex-direction:column;overflow:hidden;}
+.fside.fo{background:rgba(76,175,80,.13);border:2px solid rgba(76,175,80,.35);border-radius:18px 0 0 18px;}
+.fside.fx{background:rgba(244,67,54,.13);border:2px solid rgba(244,67,54,.35);border-radius:0 18px 18px 0;}
+.f-label{font-size:3.5rem;font-weight:900;text-align:center;padding:8px 0 0;opacity:.55;line-height:1;}
+.fo .f-label{color:#4CAF50;}
+.fx .f-label{color:#f44336;}
+.f-players{flex:1;display:flex;flex-wrap:wrap;align-content:flex-start;gap:5px;padding:8px;overflow:hidden;}
+
+/* 미니미 */
+.mc{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.mc .em{font-size:1.75rem;}
+.mc .mn{font-size:.52rem;color:rgba(255,255,255,.7);max-width:48px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.mc.cel{animation:jump .4s ease infinite alternate;}
+.mc.out{opacity:.22;filter:grayscale(1);}
+@keyframes jump{to{transform:translateY(-9px);}}
+
+.pending-row{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-bottom:10px;opacity:.4;min-height:10px;}
+.host-btns{text-align:center;margin-top:8px;}
+
+/* 버튼 변형 */
+.btn-reveal{background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;font-size:1.1rem;padding:14px 38px;}
+.btn-next{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:1.05rem;padding:14px 34px;}
+.btn-o{background:linear-gradient(135deg,#56ab2f,#a8e063);color:#fff;font-size:2.4rem;padding:22px 44px;border-radius:20px;}
+.btn-x{background:linear-gradient(135deg,#ff416c,#ff4b2b);color:#fff;font-size:2.4rem;padding:22px 44px;border-radius:20px;}
+
+/* 학생 게임 */
+.pg-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:20px;gap:12px;}
+.p-q{font-size:1.4rem;font-weight:700;text-align:center;line-height:1.45;padding:20px;background:rgba(255,255,255,.07);border-radius:16px;width:100%;max-width:480px;}
+.ox-row{display:flex;gap:20px;justify-content:center;}
+.sel-ans{font-size:5.5rem;text-align:center;animation:pop .3s ease;}
+@keyframes pop{from{transform:scale(.7);opacity:0;}50%{transform:scale(1.15);}to{transform:scale(1);opacity:1;}}
+.rev-ok{color:#4CAF50;font-size:1.2rem;font-weight:700;}
+.rev-no{color:#f44336;font-size:1.2rem;font-weight:700;}
+
+/* 아바타 선택 */
+.av-grid{display:flex;gap:14px;justify-content:center;margin:16px 0;}
+.av-opt{font-size:2.3rem;cursor:pointer;padding:10px;border:3px solid transparent;border-radius:50%;transition:all .18s;}
+.av-opt.sel{border-color:#f093fb;background:rgba(240,147,251,.2);}
+.av-opt:hover{transform:scale(1.12);}
+
+/* 시상대 */
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin:16px 0;height:210px;}
+.pd-slot{display:flex;flex-direction:column;align-items:center;}
+.pd-chars{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;min-height:90px;align-items:flex-end;padding-bottom:4px;}
+.pd-block{display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:900;color:rgba(0,0,0,.7);border-radius:8px 8px 0 0;min-width:90px;}
+.pd1{height:120px;background:linear-gradient(135deg,#ffd700,#ffb300);}
+.pd2{height:88px;background:linear-gradient(135deg,#c0c0c0,#9e9e9e);}
+.pd3{height:68px;background:linear-gradient(135deg,#cd7f32,#a0522d);}
+
+/* 통계 */
+.stats{width:100%;max-width:580px;display:flex;flex-direction:column;gap:7px;}
+.st-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.07);border-radius:12px;padding:11px 15px;}
+.st-rank{font-size:1.1rem;font-weight:900;min-width:28px;}
+.st-av{font-size:1.4rem;}
+.st-name{flex:1;font-weight:700;font-size:.95rem;text-align:left;}
+.st-bar{width:90px;height:7px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;}
+.st-fill{height:100%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:4px;}
+.st-sc{font-size:1rem;font-weight:700;color:#f093fb;min-width:48px;text-align:right;}
+.pf-badge{background:linear-gradient(135deg,#ffd700,#ff9500);color:#000;font-weight:900;font-size:.65rem;padding:2px 6px;border-radius:6px;margin-left:4px;vertical-align:middle;}
+
+/* 대기 스피너 */
+.spinner{font-size:3.5rem;animation:spin 1.8s linear infinite;margin-bottom:16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* 플레이어 결과 */
+.pres{text-align:center;padding:20px;}
+.pres .big-av{font-size:4.5rem;}
+.pres .pname{font-size:1.8rem;font-weight:900;margin:8px 0;}
+.pres .pscore{font-size:2.8rem;font-weight:900;color:#f093fb;margin:8px 0;}
+.pres .prank{color:rgba(255,255,255,.55);font-size:1rem;margin-bottom:16px;}
+.pf-big{font-size:1.4rem;font-weight:900;background:linear-gradient(135deg,#ffd700,#ff9500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+@media(max-width:480px){
+  .title{font-size:1.8rem;}
+  .q-text,.p-q{font-size:1.15rem;}
+  .room-code{font-size:3rem;}
+  .sport-grid{grid-template-columns:repeat(2,1fr);}
+  .mode-grid{grid-template-columns:1fr;}
+  .timer{font-size:3rem;}
+  .field{height:210px;}
+  .mc .em{font-size:1.45rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- 모드 선택 -->
+<div id="scrMode" class="screen active">
+<div class="center">
+  <div class="title">🏅 스포츠 OX 퀴즈</div>
+  <div class="sub">누구로 참여하시나요?</div>
+  <div class="mode-grid">
+    <div class="mode-btn" onclick="goHost()"><span class="mode-icon">📺</span>선생님<br><small style="font-weight:400;opacity:.7">(게임 진행)</small></div>
+    <div class="mode-btn" onclick="goPlayer()"><span class="mode-icon">📱</span>학생<br><small style="font-weight:400;opacity:.7">(게임 참여)</small></div>
+  </div>
+</div>
+</div>
+
+<!-- 선생님: 설정 -->
+<div id="scrHostSetup" class="screen">
+<div class="center">
+  <div class="title">🎮 게임 설정</div>
+  <div class="sub">종목 선택</div>
+  <div class="sport-grid">
+    <div class="sp-btn" onclick="selSport('volleyball',this)"><span class="sp-em">🏐</span>배구</div>
+    <div class="sp-btn" onclick="selSport('soccer',this)"><span class="sp-em">⚽</span>축구</div>
+    <div class="sp-btn" onclick="selSport('basketball',this)"><span class="sp-em">🏀</span>농구</div>
+    <div class="sp-btn" onclick="selSport('badminton',this)"><span class="sp-em">🏸</span>배드민턴</div>
+    <div class="sp-btn" onclick="selSport('golf',this)"><span class="sp-em">⛳</span>골프</div>
+  </div>
+  <div class="sub" style="margin-top:10px">문제 수</div>
+  <div class="cnt-grid">
+    <div class="cnt-btn" onclick="selCount(10,this)">10개</div>
+    <div class="cnt-btn" onclick="selCount(20,this)">20개</div>
+    <div class="cnt-btn" onclick="selCount(30,this)">30개</div>
+  </div>
+  <button class="btn btn-pri" style="margin-top:16px;font-size:1.1rem;padding:15px 40px;" onclick="createRoom()">🚀 방 만들기</button>
+  <button class="btn btn-ghost" style="margin-top:10px;" onclick="show('scrMode')">← 뒤로</button>
+</div>
+</div>
+
+<!-- 선생님: 대기실 -->
+<div id="scrHostLobby" class="screen">
+<div class="center">
+  <div class="title">📡 대기실</div>
+  <div class="room-box">
+    <div style="color:rgba(255,255,255,.5);font-size:.85rem;margin-bottom:6px;">방 코드</div>
+    <div class="room-code" id="dispCode">----</div>
+    <div style="color:rgba(255,255,255,.45);font-size:.8rem;margin-top:6px;">학생들에게 이 코드를 알려주세요</div>
+  </div>
+  <div id="qrBox" style="margin:8px 0;"></div>
+  <div class="sub">참가 <span id="pCount">0</span>명</div>
+  <div class="player-list" id="lobbyList"></div>
+  <button class="btn btn-pri" style="font-size:1.1rem;padding:15px 40px;" onclick="startGame()">▶ 게임 시작!</button>
+  <button class="btn btn-ghost" style="margin-top:10px;" onclick="show('scrHostSetup')">← 설정으로</button>
+</div>
+</div>
+
+<!-- 선생님: 게임 -->
+<div id="scrHostGame" class="screen">
+<div id="hostGame">
+  <div class="hg-top">
+    <div class="q-info" id="hqInfo">문제 1/10</div>
+    <div class="timer" id="hTimer">10</div>
+    <div class="ans-cnt" id="hAnsCnt">0명 답변</div>
+  </div>
+  <div class="prog"><div class="prog-fill" id="hProg" style="width:0%"></div></div>
+  <div class="q-text" id="hQuestion">로딩 중...</div>
+  <div class="field">
+    <div class="fside fo"><div class="f-label">O</div><div class="f-players" id="fieldO"></div></div>
+    <div class="fside fx"><div class="f-label">X</div><div class="f-players" id="fieldX"></div></div>
+  </div>
+  <div class="pending-row" id="fieldPend"></div>
+  <div class="host-btns">
+    <button class="btn btn-reveal" id="btnReveal" onclick="revealAnswer()" style="display:none;">🎯 정답 공개</button>
+    <button class="btn btn-next" id="btnNext" onclick="nextQuestion()" style="display:none;">다음 문제 →</button>
+  </div>
+</div>
+</div>
+
+<!-- 선생님: 결과 -->
+<div id="scrHostResult" class="screen">
+<div class="center">
+  <div class="title">🏆 최종 결과!</div>
+  <div id="podiumWrap">
+    <div class="sub" id="podiumLabel">퍼펙트 스코어! 🎉</div>
+    <div class="podium" id="podiumEl"></div>
+  </div>
+  <div class="sub" style="margin-top:20px;">📊 전체 순위</div>
+  <div class="stats" id="statsEl"></div>
+  <button class="btn btn-pri" style="margin-top:26px;" onclick="resetGame()">🔄 새 게임</button>
+</div>
+</div>
+
+<!-- 학생: 입장 -->
+<div id="scrPlayerJoin" class="screen">
+<div class="center">
+  <div class="title">🎮 참여하기</div>
+  <div class="card">
+    <div style="margin-bottom:16px;"><label>방 코드</label>
+      <input class="inp" id="inpCode" placeholder="방 코드 4자리" maxlength="6" style="text-align:center;letter-spacing:.2em;font-size:1.4rem;font-weight:900;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div style="margin-bottom:16px;"><label>내 이름</label>
+      <input class="inp" id="inpName" placeholder="이름 (최대 5자)" maxlength="5">
+    </div>
+    <div><label style="text-align:center;">캐릭터 선택</label>
+      <div class="av-grid">
+        <div class="av-opt sel" onclick="selAv(0,this)">🐱</div>
+        <div class="av-opt" onclick="selAv(1,this)">🐶</div>
+        <div class="av-opt" onclick="selAv(2,this)">🐰</div>
+        <div class="av-opt" onclick="selAv(3,this)">🐹</div>
+        <div class="av-opt" onclick="selAv(4,this)">🦊</div>
+      </div>
+    </div>
+    <button class="btn btn-pri" style="width:100%;margin-top:10px;font-size:1.05rem;" onclick="joinRoom()">입장하기 🚪</button>
+  </div>
+  <button class="btn btn-ghost" style="margin-top:10px;" onclick="show('scrMode')">← 뒤로</button>
+</div>
+</div>
+
+<!-- 학생: 대기 -->
+<div id="scrPlayerWait" class="screen">
+<div class="center">
+  <div class="spinner">⏳</div>
+  <div class="title" style="font-size:1.7rem;">잠깐만요!</div>
+  <div class="sub">선생님이 게임을 시작할 때까지 기다려요</div>
+  <div id="waitInfo" style="font-size:1.2rem;margin-top:16px;"></div>
+</div>
+</div>
+
+<!-- 학생: 게임 -->
+<div id="scrPlayerGame" class="screen">
+<div class="pg-wrap">
+  <div class="q-info" id="pqInfo">문제 1/10</div>
+  <div class="timer" id="pTimer">10</div>
+  <div class="p-q" id="pQuestion">로딩 중...</div>
+  <div class="ox-row" id="oxRow">
+    <button class="btn btn-o" onclick="submitAns('O')">⭕</button>
+    <button class="btn btn-x" onclick="submitAns('X')">❌</button>
+  </div>
+  <div id="selDisp" class="sel-ans" style="display:none;"></div>
+  <div id="revDisp" style="display:none;margin-top:10px;"></div>
+</div>
+</div>
+
+<!-- 학생: 결과 -->
+<div id="scrPlayerResult" class="screen">
+<div class="center">
+  <div class="title">🎉 게임 끝!</div>
+  <div class="pres" id="pResult"></div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyDhaK93yBvOogRw58tIPespti9wvFWpFlw",
+  authDomain:"sports-quiz-a95ed.firebaseapp.com",
+  databaseURL:"https://sports-quiz-a95ed-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"sports-quiz-a95ed",
+  storageBucket:"sports-quiz-a95ed.firebasestorage.app",
+  messagingSenderId:"541337390127",
+  appId:"1:541337390127:web:1816d7385cbb1f507e4ada"
+});
+const db = getDatabase(app);
+
+const AV = ['🐱','🐶','🐰','🐹','🦊'];
+
+const QDB = {
+  volleyball:[
+    {q:"배구 경기에서 한 팀의 선수는 6명이다.",a:true},
+    {q:"배구 경기에서 세트당 25점을 먼저 얻으면 세트를 이긴다.",a:true},
+    {q:"배구에서 리베로는 앞줄에서 공격 스파이크를 칠 수 없다.",a:true},
+    {q:"배구 남자 네트 높이는 2.43m이다.",a:true},
+    {q:"배구 여자 네트 높이는 2.24m이다.",a:true},
+    {q:"배구에서 한 팀이 공을 3번 이내에 넘겨야 한다.",a:true},
+    {q:"배구에서 서브는 항상 같은 선수만 한다.",a:false},
+    {q:"배구 코트의 길이는 18m이다.",a:true},
+    {q:"배구에서 공이 안테나에 맞으면 실점이다.",a:true},
+    {q:"배구 5세트는 15점 선취로 이긴다.",a:true},
+    {q:"배구에서 타임아웃은 세트당 2회 요청할 수 있다.",a:true},
+    {q:"배구에서 공이 라인 위에 떨어지면 인(IN)이다.",a:true},
+    {q:"배구에서 로테이션은 서브권을 얻었을 때 시계 방향으로 한다.",a:true},
+    {q:"배구에서 오버네트는 상대방 코트로 손이 넘어가 공을 건드리는 것이다.",a:true},
+    {q:"배구에서 블로킹은 항상 3번 터치 중 1번으로 카운트된다.",a:false},
+    {q:"배구에서 공이 네트에 닿고 넘어가면 계속 플레이할 수 있다.",a:true},
+    {q:"배구에서 더블 파울이 나오면 다시 서브한다.",a:true},
+    {q:"배구 코트의 폭은 9m이다.",a:true},
+    {q:"배구 경기에서 5세트 3선승제를 사용한다.",a:true},
+    {q:"배구에서 리베로 선수는 다른 선수와 같은 색 유니폼을 입는다.",a:false},
+    {q:"배구에서 서브가 네트에 닿고 넘어가면 실점이다.",a:false},
+    {q:"배구에서 공이 선수 몸에 맞아도 플레이는 계속된다.",a:true},
+    {q:"배구에서 풋 인(발로 공을 건드리는 것)이 허용된다.",a:true},
+    {q:"배구에서 볼이 안테나 바깥쪽을 넘어가도 인이다.",a:false},
+    {q:"배구 경기에서 12점에 기술 타임아웃이 주어진다.",a:true},
+    {q:"배구에서 주심이 네트 옆 심판대 위에 서 있다.",a:true},
+    {q:"배구에서 수비수가 네트 위의 공을 손으로 막는 것은 허용된다.",a:false},
+    {q:"배구에서 경기 중 감독은 코트에 들어갈 수 없다.",a:true},
+    {q:"배구에서 6명이 로테이션하며 서브를 번갈아 넣는다.",a:true},
+    {q:"배구에서 공격 선수가 중앙선을 완전히 넘으면 반칙이다.",a:true},
+  ],
+  soccer:[
+    {q:"축구 경기에서 한 팀의 선수는 11명이다.",a:true},
+    {q:"축구 경기 시간은 전후반 각 45분이다.",a:true},
+    {q:"골키퍼는 자기 페널티 박스 안에서만 손을 쓸 수 있다.",a:true},
+    {q:"옐로카드 2장은 레드카드와 같은 효과다.",a:true},
+    {q:"코너킥은 수비팀이 찬다.",a:false},
+    {q:"페널티킥은 페널티 스팟에서 찬다.",a:true},
+    {q:"축구에서 직접 프리킥으로 골을 넣을 수 있다.",a:true},
+    {q:"스로인은 손으로 공을 던져 경기장 안으로 넣는 것이다.",a:true},
+    {q:"골킥은 공격팀이 찬다.",a:false},
+    {q:"공이 골라인을 완전히 넘어야 골이다.",a:true},
+    {q:"인다이렉트 프리킥은 다른 선수가 공에 닿아야 골이 된다.",a:true},
+    {q:"레드카드 퇴장 후 교체 선수를 투입할 수 있다.",a:false},
+    {q:"후반전이 끝나면 항상 연장전을 한다.",a:false},
+    {q:"페널티킥 시 골키퍼는 킥 전까지 골 라인에 있어야 한다.",a:true},
+    {q:"축구에서 선수 교체는 최대 5번까지 가능하다.",a:true},
+    {q:"오프사이드 위치에 있어도 공이 패스되지 않으면 반칙이 아니다.",a:true},
+    {q:"골키퍼가 공을 손에서 발로 차면 핸드볼 반칙이다.",a:false},
+    {q:"헤더로 자책골을 넣으면 득점이 인정된다.",a:true},
+    {q:"축구 코트 중앙 원의 반지름은 9.15m이다.",a:true},
+    {q:"페널티킥 시 다른 선수들은 페널티 박스 밖에 있어야 한다.",a:true},
+    {q:"경기 시작은 항상 센터 킥으로 시작한다.",a:true},
+    {q:"골키퍼는 공을 손으로 잡은 후 6초 이내에 내보내야 한다.",a:true},
+    {q:"오프사이드 선상에 있으면 오프사이드다.",a:false},
+    {q:"비디오 판독(VAR)은 오프사이드 판정에도 사용할 수 있다.",a:true},
+    {q:"킥오프 후 상대가 공에 닿기 전에 같은 선수가 다시 찰 수 있다.",a:false},
+    {q:"공격수가 수비수보다 앞에 있으면 무조건 오프사이드다.",a:false},
+    {q:"페널티 박스 안에서의 반칙은 무조건 페널티킥이다.",a:false},
+    {q:"스로인을 던질 때 두 발이 라인 밖에 있어야 한다.",a:false},
+    {q:"경기 중 부상 추가 시간은 주심이 결정한다.",a:true},
+    {q:"골네트에 맞고 나온 공은 골이 아니다.",a:true},
+  ],
+  basketball:[
+    {q:"농구 경기에서 한 팀의 선수는 5명이다.",a:true},
+    {q:"3점슛은 3점 라인 밖에서 성공하면 얻는다.",a:true},
+    {q:"드리블 중 두 손으로 공을 잡으면 다시 드리블할 수 있다.",a:false},
+    {q:"FIBA 규정에서 파울 5개를 받으면 퇴장이다.",a:true},
+    {q:"자유투는 1점이다.",a:true},
+    {q:"FIBA 농구 경기 시간은 4쿼터 각 10분이다.",a:true},
+    {q:"농구 링의 높이는 3.05m이다.",a:true},
+    {q:"농구에서 24초 안에 슛을 쏘지 않으면 상대방 공이 된다.",a:true},
+    {q:"트래블링은 드리블하지 않고 3걸음 이상 걷는 것이다.",a:true},
+    {q:"NBA 3점 라인 거리는 약 7.24m이다.",a:true},
+    {q:"농구에서 슬램덩크를 하면 반칙이다.",a:false},
+    {q:"농구 경기에서 동점으로 끝나면 연장전을 한다.",a:true},
+    {q:"농구에서 블로킹 파울과 차지 파울이 있다.",a:true},
+    {q:"농구에서 공이 바닥에 닿으면 무조건 아웃이다.",a:false},
+    {q:"백코트 바이올레이션은 앞코트로 가져갔다가 뒷코트로 가져오는 것이다.",a:true},
+    {q:"농구에서 골텐딩은 공격 측에게만 해당된다.",a:false},
+    {q:"농구 자유투 라인은 링에서 약 4.6m 거리에 있다.",a:true},
+    {q:"기술적 파울을 받으면 상대팀이 자유투를 얻는다.",a:true},
+    {q:"농구 경기 코트는 직사각형이다.",a:true},
+    {q:"포워드 선수는 주로 3점슛을 전담한다.",a:false},
+    {q:"농구에서 인터퍼런스는 링에 닿아 있는 공을 건드리는 것이다.",a:true},
+    {q:"농구에서 점프볼로 게임이 시작된다.",a:true},
+    {q:"농구에서 더블드리블은 반칙이다.",a:true},
+    {q:"농구에서 라인 위에 발이 닿으면 아웃이다.",a:true},
+    {q:"농구에서 센터는 주로 골대 근처에서 플레이한다.",a:true},
+    {q:"NBA에서 쿼터당 경기 시간은 12분이다.",a:true},
+    {q:"농구 자유투 라인 안쪽으로 들어가면 바이올레이션이다.",a:true},
+    {q:"농구에서 공격 리바운드 후 24초 타이머가 14초로 리셋된다.",a:true},
+    {q:"농구에서 아이솔레이션은 1대1 상황을 만드는 전술이다.",a:true},
+    {q:"농구 코트의 중앙선은 하프 라인이라고도 한다.",a:true},
+  ],
+  badminton:[
+    {q:"배드민턴 경기에서 셔틀콕을 사용한다.",a:true},
+    {q:"배드민턴 단식 코트와 복식 코트의 폭은 같다.",a:false},
+    {q:"배드민턴 경기에서 21점을 먼저 얻으면 세트를 이긴다.",a:true},
+    {q:"배드민턴 서브는 반드시 대각선 방향으로 넣어야 한다.",a:true},
+    {q:"셔틀콕이 네트를 넘지 못하면 상대방 점수다.",a:true},
+    {q:"배드민턴 서브 시 셔틀콕을 허리 위에서 치면 반칙이다.",a:true},
+    {q:"배드민턴 복식 경기는 각 팀당 2명이다.",a:true},
+    {q:"배드민턴에서 셔틀콕이 라인 위에 떨어지면 인(IN)이다.",a:true},
+    {q:"셔틀콕이 네트에 닿고 넘어가면 실점이다.",a:false},
+    {q:"배드민턴 경기에서 3세트 중 2세트를 먼저 이기면 승리한다.",a:true},
+    {q:"배드민턴에서 20-20이 되면 2점 차로 이겨야 한다.",a:true},
+    {q:"배드민턴에서 드라이브는 낮고 빠르게 수평으로 치는 기술이다.",a:true},
+    {q:"배드민턴 셔틀콕의 깃털 개수는 16개이다.",a:true},
+    {q:"배드민턴에서 드롭샷은 상대방 네트 가까이 떨어뜨리는 기술이다.",a:true},
+    {q:"배드민턴 코트의 길이는 13.4m이다.",a:true},
+    {q:"배드민턴에서 클리어는 상대방 코트 뒤쪽으로 높이 보내는 기술이다.",a:true},
+    {q:"배드민턴에서 스매시는 셔틀콕을 강하게 내리치는 기술이다.",a:true},
+    {q:"배드민턴 복식에서 서비스 코트는 단식보다 좁다.",a:false},
+    {q:"배드민턴에서 라켓으로 한 번에 두 번 셔틀콕을 치면 반칙이다.",a:true},
+    {q:"배드민턴 경기에서 코인 토스로 서브권을 결정한다.",a:true},
+    {q:"배드민턴에서 셔틀콕이 천장에 닿으면 경기가 중단된다.",a:true},
+    {q:"배드민턴에서 상대방 라켓을 건드리면 반칙이다.",a:true},
+    {q:"배드민턴에서 헤어핀은 네트 가까이에서 하는 기술이다.",a:true},
+    {q:"배드민턴 복식에서 파트너의 공을 쳐도 된다.",a:false},
+    {q:"배드민턴 경기에서 심판 판정에 챌린지를 신청할 수 있다.",a:true},
+    {q:"배드민턴에서 넷 플레이는 네트 가까이에서 하는 기술이다.",a:true},
+    {q:"배드민턴 단식 코트 폭은 5.18m이다.",a:true},
+    {q:"배드민턴에서 포핸드와 백핸드 기술이 있다.",a:true},
+    {q:"배드민턴에서 21점이 되고 2점 이상 앞서면 세트 종료다.",a:true},
+    {q:"배드민턴 서브는 팔꿈치가 펴진 상태에서 쳐야 한다.",a:false},
+  ],
+  golf:[
+    {q:"골프에서 파보다 1타 적게 치면 버디(Birdie)라고 한다.",a:true},
+    {q:"골프에서 홀인원은 1번 만에 홀에 넣는 것이다.",a:true},
+    {q:"골프에서 이글은 파보다 2타 적게 치는 것이다.",a:true},
+    {q:"골프 경기는 18홀이 표준이다.",a:true},
+    {q:"골프 클럽은 최대 14개까지 가방에 넣을 수 있다.",a:true},
+    {q:"골프에서 버디는 파보다 1타 많이 치는 것이다.",a:false},
+    {q:"골프에서 퍼터는 그린 위에서 주로 사용한다.",a:true},
+    {q:"골프에서 보기(Bogey)는 파보다 1타 많이 치는 것이다.",a:true},
+    {q:"골프에서 드라이버는 거리가 가장 짧은 클럽이다.",a:false},
+    {q:"골프 경기에서 점수가 낮을수록 좋다.",a:true},
+    {q:"골프에서 알바트로스는 파보다 3타 적게 치는 것이다.",a:true},
+    {q:"골프에서 페어웨이는 티박스에서 그린까지 잔디가 짧은 구역이다.",a:true},
+    {q:"골프에서 벙커는 모래 장애물이다.",a:true},
+    {q:"골프에서 러프는 페어웨이 옆에 잔디가 긴 구역이다.",a:true},
+    {q:"골프에서 캐디는 선수의 클럽을 들어준다.",a:true},
+    {q:"골프에서 그린 위에서 상대방 퍼팅 라인 위를 걸어도 된다.",a:false},
+    {q:"골프에서 OB가 나면 벌타 없이 다시 칠 수 있다.",a:false},
+    {q:"골프에서 동반자의 공을 실수로 치면 벌타가 있다.",a:true},
+    {q:"골프에서 연습 스윙은 타수에 포함되지 않는다.",a:true},
+    {q:"골프에서 공이 물에 빠지면 드롭 후 계속 플레이한다.",a:true},
+    {q:"골프에서 마커는 퍼팅 그린 위 공을 표시하는 도구다.",a:true},
+    {q:"골프에서 티샷은 티박스에서 치는 첫 번째 샷이다.",a:true},
+    {q:"골프에서 스코어카드에 서명하지 않으면 실격이다.",a:true},
+    {q:"골프에서 공을 발로 움직이면 반칙이다.",a:true},
+    {q:"골프 각 홀의 기준 타수를 파(Par)라고 한다.",a:true},
+    {q:"골프에서 칩샷은 그린 근처에서 공을 낮게 치는 기술이다.",a:true},
+    {q:"골프에서 에이스(Ace)는 홀인원과 같은 말이다.",a:true},
+    {q:"골프에서 클럽은 몇 개를 사용해도 상관없다.",a:false},
+    {q:"골프에서 퍼팅 라인이란 공에서 홀까지의 경로다.",a:true},
+    {q:"골프에서 피치샷은 공을 높이 띄워 그린에 세우는 기술이다.",a:true},
+  ],
+};
+
+// ─── 상태 ───
+let sport=null, qCount=10, myAv=0;
+let roomCode='', playerId='', myAnswers={};
+let gameUnsub=null, timerIv=null;
+
+// ─── 유틸 ───
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+window.show=show;
+function $(id){return document.getElementById(id);}
+function toast(m){const e=document.createElement('div');e.textContent=m;e.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:9px 20px;border-radius:20px;z-index:9999;font-size:.9rem;pointer-events:none;';document.body.appendChild(e);setTimeout(()=>e.remove(),2200);}
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function genCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let r='';for(let i=0;i<4;i++)r+=c[Math.floor(Math.random()*c.length)];return r;}
+function miniHtml(p,cel,out){return`<div class="mc${cel?' cel':''}${out?' out':''}"><div class="em">${AV[p.avatar]}</div><div class="mn">${p.name}</div></div>`;}
+
+// ─── 모드 선택 ───
+window.goHost=()=>show('scrHostSetup');
+window.goPlayer=()=>{
+  const rc=new URLSearchParams(location.search).get('room');
+  if(rc)$('inpCode').value=rc.toUpperCase();
+  show('scrPlayerJoin');
+};
+
+// ─── 선생님: 설정 ───
+window.selSport=(s,el)=>{sport=s;document.querySelectorAll('.sp-btn').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');};
+window.selCount=(n,el)=>{qCount=n;document.querySelectorAll('.cnt-btn').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');};
+
+window.createRoom=async()=>{
+  if(!sport){toast('종목을 선택하세요!');return;}
+  const pool=QDB[sport];
+  const cnt=Math.min(qCount,pool.length);
+  const ids=shuffle([...Array(pool.length).keys()]).slice(0,cnt);
+  roomCode=genCode();
+  await set(ref(db,`rooms/${roomCode}`),{sport,totalQ:cnt,questionIds:ids,currentQ:0,phase:'lobby',createdAt:Date.now()});
+  $('dispCode').textContent=roomCode;
+  $('qrBox').innerHTML='';
+  const url=`${location.origin}${location.pathname}?room=${roomCode}`;
+  if(window.QRCode)new QRCode($('qrBox'),{text:url,width:150,height:150,colorDark:'#fff',colorLight:'#302b63',correctLevel:QRCode.CorrectLevel.M});
+  onValue(ref(db,`rooms/${roomCode}/players`),snap=>{
+    const ps=snap.val()||{};const list=Object.values(ps);
+    $('pCount').textContent=list.length;
+    $('lobbyList').innerHTML=list.map(p=>`<div class="p-chip"><span>${AV[p.avatar]}</span>${p.name}</div>`).join('');
+  });
+  show('scrHostLobby');
+};
+
+window.startGame=async()=>{
+  const snap=await get(ref(db,`rooms/${roomCode}/players`));
+  if(!snap.val()||Object.keys(snap.val()).length===0){toast('참가자가 없어요!');return;}
+  await update(ref(db,`rooms/${roomCode}`),{phase:'question',currentQ:0,timerStart:Date.now()});
+  subHostGame();show('scrHostGame');
+};
+
+// ─── 선생님: 게임 구독 ───
+function subHostGame(){
+  if(gameUnsub)gameUnsub();
+  gameUnsub=onValue(ref(db,`rooms/${roomCode}`),snap=>{
+    const d=snap.val();if(!d)return;
+    const{phase,currentQ,totalQ,questionIds,sport:sp,players,timerStart}=d;
+    if(phase==='result'){showHostResult(players,totalQ);return;}
+    const qObj=QDB[sp][questionIds[currentQ]];
+    $('hqInfo').textContent=`문제 ${currentQ+1} / ${totalQ}`;
+    $('hQuestion').textContent=qObj.q;
+    $('hProg').style.width=`${(currentQ/totalQ)*100}%`;
+    $('btnReveal').style.display=phase==='question'?'inline-block':'none';
+    $('btnNext').style.display=phase==='reveal'?'inline-block':'none';
+    $('btnNext').textContent=currentQ+1>=totalQ?'🏆 결과 보기':'다음 문제 →';
+    renderField(players,currentQ,phase==='reveal',qObj.a);
+    if(players){
+      const tot=Object.keys(players).length;
+      const ans=Object.values(players).filter(p=>p.answers&&p.answers[currentQ]!==undefined).length;
+      $('hAnsCnt').textContent=`${ans}/${tot}명 답변`;
+    }
+    if(phase==='question'){
+      clearInterval(timerIv);
+      const tick=()=>{
+        const left=Math.max(0,10-(Date.now()-timerStart)/1000);
+        const n=Math.ceil(left);
+        $('hTimer').textContent=n;
+        $('hTimer').classList.toggle('urg',n<=3);
+        if(left<=0){clearInterval(timerIv);revealAnswer();}
+      };
+      tick();timerIv=setInterval(tick,400);
+    } else {
+      clearInterval(timerIv);$('hTimer').textContent='';$('hTimer').classList.remove('urg');
+    }
+  });
+}
+
+function renderField(players,qIdx,revealed,correctBool){
+  if(!players){$('fieldO').innerHTML='';$('fieldX').innerHTML='';$('fieldPend').innerHTML='';return;}
+  const O=[],X=[],P=[];
+  Object.values(players).forEach(p=>{
+    const a=p.answers&&p.answers[qIdx]!==undefined?p.answers[qIdx]:null;
+    if(a==='O')O.push(p);else if(a==='X')X.push(p);else P.push(p);
+  });
+  if(revealed){
+    const ca=correctBool?'O':'X';
+    $('fieldO').innerHTML=O.map(p=>miniHtml(p,ca==='O',ca==='X')).join('');
+    $('fieldX').innerHTML=X.map(p=>miniHtml(p,ca==='X',ca==='O')).join('');
+    $('fieldPend').innerHTML='';
+  } else {
+    $('fieldO').innerHTML=O.map(p=>miniHtml(p,false,false)).join('');
+    $('fieldX').innerHTML=X.map(p=>miniHtml(p,false,false)).join('');
+    $('fieldPend').innerHTML=P.map(p=>miniHtml(p,false,false)).join('');
+  }
+}
+
+window.revealAnswer=async()=>{
+  clearInterval(timerIv);
+  const snap=await get(ref(db,`rooms/${roomCode}`));
+  const d=snap.val();
+  const{sport:sp,questionIds,currentQ,players}=d;
+  const correct=QDB[sp][questionIds[currentQ]].a;
+  const ca=correct?'O':'X';
+  await update(ref(db,`rooms/${roomCode}`),{phase:'reveal'});
+  if(players){
+    const upd={};
+    Object.entries(players).forEach(([pid,p])=>{
+      const a=p.answers&&p.answers[currentQ]!==undefined?p.answers[currentQ]:null;
+      const ok=a===ca;
+      upd[`players/${pid}/score`]=(p.score||0)+(ok?1:0);
+      upd[`players/${pid}/streak`]=ok?(p.streak||0)+1:0;
+    });
+    await update(ref(db,`rooms/${roomCode}`),upd);
+  }
+};
+
+window.nextQuestion=async()=>{
+  const snap=await get(ref(db,`rooms/${roomCode}`));
+  const d=snap.val();
+  const next=d.currentQ+1;
+  if(next>=d.totalQ){
+    const ps=d.players||{};const upd={};
+    Object.entries(ps).forEach(([pid,p])=>{upd[`players/${pid}/perfect`]=(p.score||0)===d.totalQ;});
+    await update(ref(db,`rooms/${roomCode}`),upd);
+    await update(ref(db,`rooms/${roomCode}`),{phase:'result'});
+  } else {
+    await update(ref(db,`rooms/${roomCode}`),{currentQ:next,phase:'question',timerStart:Date.now()});
+  }
+};
+
+function showHostResult(players,totalQ){
+  clearInterval(timerIv);show('scrHostResult');
+  if(!players)return;
+  const list=Object.values(players).sort((a,b)=>(b.score||0)-(a.score||0));
+  const perfects=list.filter(p=>p.perfect);
+
+  // 시상대
+  const podWrap=$('podiumWrap');
+  const podEl=$('podiumEl');
+  if(perfects.length>0){
+    podWrap.style.display='block';
+    // 퍼펙트 스코어가 여러명이면 모두 1등
+    const top=perfects.slice(0,5);
+    const second=list.filter(p=>!p.perfect).slice(0,3);
+    let html=`<div class="pd-slot"><div class="pd-chars cel">${top.map(p=>`<div style="text-align:center"><div style="font-size:1.8rem">${AV[p.avatar]}</div><div style="font-size:.6rem;opacity:.8">${p.name}</div></div>`).join('')}</div><div class="pd-block pd1">🥇</div></div>`;
+    if(second[0])html=`<div class="pd-slot"><div class="pd-chars">${miniHtml(second[0],false,false)}</div><div class="pd-block pd2">🥈</div></div>`+html+(second[1]?`<div class="pd-slot"><div class="pd-chars">${miniHtml(second[1],false,false)}</div><div class="pd-block pd3">🥉</div></div>`:'');
+    podEl.innerHTML=html;
+  } else {
+    // 퍼펙트 없으면 점수 순 시상대
+    podWrap.style.display='block';
+    $('podiumLabel').textContent='순위 시상대 🏅';
+    const top3=list.slice(0,3);
+    const blocks=[{cls:'pd2',m:'🥈',h:88},{cls:'pd1',m:'🥇',h:120},{cls:'pd3',m:'🥉',h:68}];
+    const order=top3.length>=2?[top3[1],top3[0],top3[2]]:top3.length===1?[null,top3[0],null]:[null,null,null];
+    podEl.innerHTML=order.map((p,i)=>p?`<div class="pd-slot"><div class="pd-chars">${miniHtml(p,i===1,false)}</div><div class="pd-block ${blocks[i].cls}" style="height:${blocks[i].h}px">${blocks[i].m}</div></div>`:'').join('');
+  }
+
+  // 통계
+  $('statsEl').innerHTML=list.map((p,i)=>{
+    const pct=totalQ>0?Math.round(((p.score||0)/totalQ)*100):0;
+    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    return `<div class="st-row"><div class="st-rank">${medal||(i+1)}</div><div class="st-av">${AV[p.avatar]}</div><div class="st-name">${p.name}${p.perfect?'<span class="pf-badge">퍼펙트!</span>':''}</div><div class="st-bar"><div class="st-fill" style="width:${pct}%"></div></div><div class="st-sc">${p.score||0}/${totalQ}</div></div>`;
+  }).join('');
+}
+
+window.resetGame=async()=>{
+  if(roomCode)await remove(ref(db,`rooms/${roomCode}`));
+  if(gameUnsub)gameUnsub();clearInterval(timerIv);
+  roomCode='';sport=null;qCount=10;
+  document.querySelectorAll('.sp-btn,.cnt-btn').forEach(b=>b.classList.remove('sel'));
+  show('scrHostSetup');
+};
+
+// ─── 학생 ───
+window.selAv=(n,el)=>{myAv=n;document.querySelectorAll('.av-opt').forEach((e,i)=>e.classList.toggle('sel',i===n));};
+
+window.joinRoom=async()=>{
+  const code=$('inpCode').value.trim().toUpperCase();
+  const name=$('inpName').value.trim();
+  if(code.length<4){toast('방 코드를 입력하세요!');return;}
+  if(!name){toast('이름을 입력하세요!');return;}
+  const snap=await get(ref(db,`rooms/${code}`));
+  if(!snap.exists()){toast('방을 찾을 수 없어요!');return;}
+  if(snap.val().phase!=='lobby'){toast('이미 게임이 시작됐어요!');return;}
+  roomCode=code;
+  const pRef=push(ref(db,`rooms/${roomCode}/players`));
+  playerId=pRef.key;
+  await set(pRef,{name,avatar:myAv,score:0,streak:0,perfect:false,joinedAt:Date.now()});
+  $('waitInfo').innerHTML=`${AV[myAv]} ${name}`;
+  subPlayerGame();show('scrPlayerWait');
+};
+
+function subPlayerGame(){
+  onValue(ref(db,`rooms/${roomCode}`),snap=>{
+    const d=snap.val();if(!d)return;
+    const{phase,currentQ,totalQ,questionIds,sport:sp,timerStart}=d;
+    if(phase==='lobby'){show('scrPlayerWait');return;}
+    if(phase==='result'){showPlayerResult(d.players,totalQ);return;}
+    const qObj=QDB[sp][questionIds[currentQ]];
+    $('pqInfo').textContent=`문제 ${currentQ+1} / ${totalQ}`;
+    $('pQuestion').textContent=qObj.q;
+    const myA=myAnswers[currentQ];
+    if(phase==='question'){
+      $('oxRow').style.display=myA?'none':'flex';
+      $('selDisp').style.display=myA?'block':'none';
+      $('selDisp').textContent=myA==='O'?'⭕':myA==='X'?'❌':'';
+      $('revDisp').style.display='none';
+      clearInterval(timerIv);
+      const tick=()=>{
+        const left=Math.max(0,10-(Date.now()-timerStart)/1000);
+        const n=Math.ceil(left);
+        $('pTimer').textContent=n;
+        $('pTimer').classList.toggle('urg',left<=3);
+        if(left<=0)clearInterval(timerIv);
+      };
+      tick();timerIv=setInterval(tick,400);
+    }
+    if(phase==='reveal'){
+      clearInterval(timerIv);$('pTimer').textContent='';
+      const ca=qObj.a?'O':'X';
+      $('oxRow').style.display='none';
+      $('selDisp').style.display='block';
+      $('selDisp').textContent=ca==='O'?'⭕ 정답!':'❌ 정답!';
+      $('revDisp').style.display='block';
+      $('revDisp').innerHTML=myA?(myA===ca?'<div class="rev-ok">✅ 맞았어요!</div>':'<div class="rev-no">💔 틀렸어요</div>'):'<div class="rev-no">⏰ 시간 초과</div>';
+    }
+    show('scrPlayerGame');
+  });
+}
+
+window.submitAns=async(ans)=>{
+  const snap=await get(ref(db,`rooms/${roomCode}`));
+  const d=snap.val();
+  if(!d||d.phase!=='question')return;
+  const qi=d.currentQ;
+  if(myAnswers[qi]!==undefined)return;
+  myAnswers[qi]=ans;
+  await update(ref(db,`rooms/${roomCode}/players/${playerId}/answers`),{[qi]:ans});
+  $('oxRow').style.display='none';
+  $('selDisp').style.display='block';
+  $('selDisp').textContent=ans==='O'?'⭕':'❌';
+};
+
+function showPlayerResult(players,totalQ){
+  clearInterval(timerIv);show('scrPlayerResult');
+  if(!players||!players[playerId])return;
+  const me=players[playerId];
+  const list=Object.values(players).sort((a,b)=>(b.score||0)-(a.score||0));
+  const rank=list.findIndex(p=>p.name===me.name)+1;
+  $('pResult').innerHTML=`
+    <div class="big-av">${AV[me.avatar]}</div>
+    <div class="pname">${me.name}</div>
+    <div class="pscore">${me.score||0} / ${totalQ}점</div>
+    <div class="prank">전체 ${list.length}명 중 ${rank}등</div>
+    ${me.perfect?'<div class="pf-big">🏆 퍼펙트 스코어!</div>':''}
+  `;
+}
+
+// ─── URL 자동 분기 ───
+(()=>{
+  const p=new URLSearchParams(location.search);
+  if(p.has('host'))show('scrHostSetup');
+  else if(p.get('room')){$('inpCode').value=p.get('room').toUpperCase();show('scrPlayerJoin');}
+})();
+</script>
+</body>
+</html>
