@@ -191,37 +191,27 @@ const FAKE_PLAYERS=[
 const QDB={
   volleyball:[
     {q:"배구 경기에서 한 팀의 선수는 6명이다.",a:true},
-    {q:"배구에서 리베로는 앞줄에서 공격 스파이크를 칠 수 없다.",a:true},
     {q:"배구 남자 네트 높이는 2.43m이다.",a:true},
-    {q:"배구 5세트는 15점 선취로 이긴다.",a:true},
     {q:"배구에서 서브는 항상 같은 선수만 한다.",a:false},
   ],
   soccer:[
     {q:"축구 경기에서 한 팀의 선수는 11명이다.",a:true},
     {q:"코너킥은 수비팀이 찬다.",a:false},
-    {q:"골키퍼는 자기 페널티 박스 안에서만 손을 쓸 수 있다.",a:true},
-    {q:"레드카드 퇴장 후 교체 선수를 투입할 수 있다.",a:false},
     {q:"공이 골라인을 완전히 넘어야 골이다.",a:true},
   ],
   basketball:[
     {q:"농구 경기에서 한 팀의 선수는 5명이다.",a:true},
     {q:"드리블 중 두 손으로 공을 잡으면 다시 드리블할 수 있다.",a:false},
-    {q:"FIBA 규정에서 파울 5개를 받으면 퇴장이다.",a:true},
     {q:"농구 링의 높이는 3.05m이다.",a:true},
-    {q:"농구에서 슬램덩크를 하면 반칙이다.",a:false},
   ],
   badminton:[
     {q:"배드민턴 경기에서 셔틀콕을 사용한다.",a:true},
     {q:"배드민턴 단식 코트와 복식 코트의 폭은 같다.",a:false},
-    {q:"셔틀콕이 네트에 닿고 넘어가면 실점이다.",a:false},
     {q:"배드민턴에서 20-20이 되면 2점 차로 이겨야 한다.",a:true},
-    {q:"배드민턴 셔틀콕의 깃털 개수는 16개이다.",a:true},
   ],
   golf:[
     {q:"골프에서 파보다 1타 적게 치면 버디(Birdie)라고 한다.",a:true},
     {q:"골프에서 버디는 파보다 1타 많이 치는 것이다.",a:false},
-    {q:"골프 경기는 18홀이 표준이다.",a:true},
-    {q:"골프에서 드라이버는 거리가 가장 짧은 클럽이다.",a:false},
     {q:"골프 경기에서 점수가 낮을수록 좋다.",a:true},
   ],
 };
@@ -236,6 +226,31 @@ let phase=''; // question | reveal
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
 window.show=show;
 function $(id){return document.getElementById(id);}
+function playCheer(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const len=Math.floor(ctx.sampleRate*.9);
+    const buf=ctx.createBuffer(1,len,ctx.sampleRate);
+    const d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+    const ns=ctx.createBufferSource();ns.buffer=buf;
+    const bf=ctx.createBiquadFilter();bf.type='bandpass';bf.frequency.value=900;bf.Q.value=.4;
+    const ng=ctx.createGain();
+    ng.gain.setValueAtTime(0,ctx.currentTime);
+    ng.gain.linearRampToValueAtTime(.35,ctx.currentTime+.12);
+    ng.gain.linearRampToValueAtTime(.22,ctx.currentTime+.5);
+    ng.gain.linearRampToValueAtTime(0,ctx.currentTime+.9);
+    ns.connect(bf);bf.connect(ng);ng.connect(ctx.destination);ns.start();
+    [[523,.0],[659,.1],[784,.2],[1047,.32]].forEach(([f,t])=>{
+      const o=ctx.createOscillator();const g=ctx.createGain();
+      o.type='sine';o.frequency.value=f;
+      g.gain.setValueAtTime(0,ctx.currentTime+t);
+      g.gain.linearRampToValueAtTime(.18,ctx.currentTime+t+.04);
+      g.gain.linearRampToValueAtTime(0,ctx.currentTime+t+.18);
+      o.connect(g);g.connect(ctx.destination);
+      o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.22);
+    });
+  }catch(e){}
+}
 
 window.pickSport=(s,el)=>{
   sport=s;
@@ -344,6 +359,7 @@ function doReveal(){
 
   renderField(true);
 
+  playCheer();
   // 정답 팝업
   const badge=q.a?'⭕':'❌';
   $('revealBadge').textContent=badge;
@@ -367,27 +383,16 @@ function showResult(){
   show('scrResult');
   const total=questions.length;
   const sorted=[...players].sort((a,b)=>b.score-a.score);
-  const perfects=sorted.filter(p=>p.score===total);
 
-  // 시상대
-  const podEl=$('podiumEl');
-  if(perfects.length>0){
-    $('podLabel').textContent='퍼펙트 스코어! 🎉';
-    const top=perfects.slice(0,5);
-    const rest=sorted.filter(p=>p.score<total);
-    let html=`<div class="pd-slot"><div class="pd-chars cel">${top.map(p=>`<div style="text-align:center"><div style="font-size:1.8rem">${AV[p.avatar]}</div><div style="font-size:.6rem;opacity:.8">${p.name}</div></div>`).join('')}</div><div class="pd-block pd1">🥇</div></div>`;
-    if(rest[0])html=`<div class="pd-slot"><div class="pd-chars"><div class="mc cel"><div class="em">${AV[rest[0].avatar]}</div><div class="mn">${rest[0].name}</div></div></div><div class="pd-block pd2">🥈</div></div>`+html+(rest[1]?`<div class="pd-slot"><div class="pd-chars"><div class="mc"><div class="em">${AV[rest[1].avatar]}</div><div class="mn">${rest[1].name}</div></div></div><div class="pd-block pd3">🥉</div></div>`:'');
-    podEl.innerHTML=html;
-  } else {
-    $('podLabel').textContent='순위 시상대 🏅';
-    const top3=sorted.slice(0,3);
-    const order=top3.length>=2?[top3[1],top3[0],top3[2]]:top3.length===1?[null,top3[0],null]:[null,null,null];
-    const blocks=[{cls:'pd2',m:'🥈',h:88},{cls:'pd1',m:'🥇',h:120},{cls:'pd3',m:'🥉',h:68}];
-    podEl.innerHTML=order.map((p,i)=>{
-      if(!p)return'';
-      return`<div class="pd-slot"><div class="pd-chars"><div class="mc${i===1?' cel':''}"><div class="em">${AV[p.avatar]}</div><div class="mn">${p.name}</div></div></div><div class="pd-block ${blocks[i].cls}" style="height:${blocks[i].h}px">${blocks[i].m}</div></div>`;
-    }).join('');
-  }
+  // 시상대 (점수 순위대로)
+  $('podLabel').textContent='순위 시상대 🏅';
+  const top3=sorted.slice(0,3);
+  const order=top3.length>=2?[top3[1],top3[0],top3[2]]:top3.length===1?[null,top3[0],null]:[null,null,null];
+  const blocks=[{cls:'pd2',m:'🥈',h:88},{cls:'pd1',m:'🥇',h:120},{cls:'pd3',m:'🥉',h:68}];
+  $('podiumEl').innerHTML=order.map((p,i)=>{
+    if(!p)return'';
+    return`<div class="pd-slot"><div class="pd-chars"><div class="mc${i===1?' cel':''}"><div class="em">${AV[p.avatar]}</div><div class="mn">${p.name}</div></div></div><div class="pd-block ${blocks[i].cls}" style="height:${blocks[i].h}px">${blocks[i].m}</div></div>`;
+  }).join('');
 
   // 통계
   $('statsEl').innerHTML=sorted.map((p,i)=>{

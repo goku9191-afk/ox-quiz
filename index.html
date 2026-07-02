@@ -530,6 +530,31 @@ function spawnSparkle(el){
 }
 function startSparkles(){if(sparkleIv)return;sparkleIv=setInterval(()=>{document.querySelectorAll('.mc.cel').forEach(spawnSparkle);},320);}
 function stopSparkles(){clearInterval(sparkleIv);sparkleIv=null;}
+function playCheer(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const len=Math.floor(ctx.sampleRate*.9);
+    const buf=ctx.createBuffer(1,len,ctx.sampleRate);
+    const d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+    const ns=ctx.createBufferSource();ns.buffer=buf;
+    const bf=ctx.createBiquadFilter();bf.type='bandpass';bf.frequency.value=900;bf.Q.value=.4;
+    const ng=ctx.createGain();
+    ng.gain.setValueAtTime(0,ctx.currentTime);
+    ng.gain.linearRampToValueAtTime(.35,ctx.currentTime+.12);
+    ng.gain.linearRampToValueAtTime(.22,ctx.currentTime+.5);
+    ng.gain.linearRampToValueAtTime(0,ctx.currentTime+.9);
+    ns.connect(bf);bf.connect(ng);ng.connect(ctx.destination);ns.start();
+    [[523,.0],[659,.1],[784,.2],[1047,.32]].forEach(([f,t])=>{
+      const o=ctx.createOscillator();const g=ctx.createGain();
+      o.type='sine';o.frequency.value=f;
+      g.gain.setValueAtTime(0,ctx.currentTime+t);
+      g.gain.linearRampToValueAtTime(.18,ctx.currentTime+t+.04);
+      g.gain.linearRampToValueAtTime(0,ctx.currentTime+t+.18);
+      o.connect(g);g.connect(ctx.destination);
+      o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.22);
+    });
+  }catch(e){}
+}
 
 // ─── 유틸 ───
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
@@ -720,7 +745,7 @@ function subHostGame(){
 }
 
 window.revealAnswer=async()=>{
-  clearInterval(timerIv);
+  clearInterval(timerIv);playCheer();
   const snap=await get(ref(db,`rooms/${roomCode}`));
   const d=snap.val();
   const{sport:sp,questionIds,currentQ,players}=d;
@@ -760,25 +785,14 @@ function showHostResult(players,totalQ){
   clearInterval(timerIv);stopSparkles();show('scrHostResult');
   if(!players)return;
   const list=Object.values(players).sort((a,b)=>(b.score||0)-(a.score||0));
-  const perfects=list.filter(p=>p.perfect);
-  const podEl=$('podiumEl');
-  if(perfects.length>0){
-    $('podiumLabel').textContent='퍼펙트 스코어! 🎉';
-    const top=perfects.slice(0,5);
-    const rest=list.filter(p=>!p.perfect);
-    let html=`<div class="pd-slot"><div class="pd-chars cel">${top.map(p=>`<div style="text-align:center"><div style="font-size:1.8rem">${AV[p.avatar]}</div><div style="font-size:.6rem;opacity:.8">${p.name}</div></div>`).join('')}</div><div class="pd-block pd1">🥇</div></div>`;
-    if(rest[0])html=`<div class="pd-slot"><div class="pd-chars"><div class="mc cel" style="position:static;transform:none;"><div class="em">${AV[rest[0].avatar]}</div><div class="mn">${rest[0].name}</div></div></div><div class="pd-block pd2">🥈</div></div>`+html+(rest[1]?`<div class="pd-slot"><div class="pd-chars"><div class="mc" style="position:static;transform:none;"><div class="em">${AV[rest[1].avatar]}</div><div class="mn">${rest[1].name}</div></div></div><div class="pd-block pd3">🥉</div></div>`:'');
-    podEl.innerHTML=html;
-  } else {
-    $('podiumLabel').textContent='순위 시상대 🏅';
-    const top3=list.slice(0,3);
-    const order=top3.length>=2?[top3[1],top3[0],top3[2]]:top3.length===1?[null,top3[0],null]:[null,null,null];
-    const blocks=[{cls:'pd2',m:'🥈',h:88},{cls:'pd1',m:'🥇',h:120},{cls:'pd3',m:'🥉',h:68}];
-    podEl.innerHTML=order.map((p,i)=>{
-      if(!p)return'';
-      return`<div class="pd-slot"><div class="pd-chars"><div class="mc${i===1?' cel':''}" style="position:static;transform:none;"><div class="em">${AV[p.avatar]}</div><div class="mn">${p.name}</div></div></div><div class="pd-block ${blocks[i].cls}" style="height:${blocks[i].h}px">${blocks[i].m}</div></div>`;
-    }).join('');
-  }
+  $('podiumLabel').textContent='순위 시상대 🏅';
+  const top3=list.slice(0,3);
+  const order=top3.length>=2?[top3[1],top3[0],top3[2]]:top3.length===1?[null,top3[0],null]:[null,null,null];
+  const blocks=[{cls:'pd2',m:'🥈',h:88},{cls:'pd1',m:'🥇',h:120},{cls:'pd3',m:'🥉',h:68}];
+  $('podiumEl').innerHTML=order.map((p,i)=>{
+    if(!p)return'';
+    return`<div class="pd-slot"><div class="pd-chars"><div class="mc${i===1?' cel':''}" style="position:static;transform:none;"><div class="em">${AV[p.avatar]}</div><div class="mn">${p.name}</div></div></div><div class="pd-block ${blocks[i].cls}" style="height:${blocks[i].h}px">${blocks[i].m}</div></div>`;
+  }).join('');
   $('statsEl').innerHTML=list.map((p,i)=>{
     const pct=totalQ>0?Math.round(((p.score||0)/totalQ)*100):0;
     const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
