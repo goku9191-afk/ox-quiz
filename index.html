@@ -85,6 +85,10 @@ label{display:block;color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:7
 }
 @keyframes jump{to{transform:translateX(-50%) translateY(-9px);}}
 @keyframes dotFade{0%{opacity:1;transform:scale(1.5);}100%{opacity:0;transform:scale(0);}}
+/* 반짝이 */
+.mc.cel .em{filter:drop-shadow(0 0 8px #ffd700);}
+.sparkle{position:absolute;pointer-events:none;font-size:.9rem;animation:sparkleUp .7s ease forwards;z-index:10;}
+@keyframes sparkleUp{0%{opacity:1;transform:translateY(0) scale(1.2)}100%{opacity:0;transform:translateY(-22px) scale(.3)}}
 
 .host-btns{text-align:center;margin-top:8px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
 
@@ -227,6 +231,9 @@ label{display:block;color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:7
     <div class="field-center-line"></div>
     <div id="miniContainer"></div>
   </div>
+
+  <!-- 정답 공개 배너 -->
+  <div id="revealBanner" style="display:none;text-align:center;padding:14px 20px;margin-bottom:10px;border-radius:16px;border:3px solid;"></div>
 
   <div class="host-btns" id="hostBtns">
     <button class="btn btn-reveal" id="btnReveal" onclick="revealAnswer()" style="display:none;">🎯 정답 공개</button>
@@ -511,6 +518,18 @@ let gameUnsub=null, timerIv=null;
 // playerPositions[pid] = {row, col} — 고정 레이아웃
 let playerPositions={};
 let prevAnswers={}; // 이전 답변 추적 (변경 감지)
+let sparkleIv=null;
+function spawnSparkle(el){
+  const s=document.createElement('div');
+  s.className='sparkle';
+  s.textContent=['✨','⭐','💫'][Math.floor(Math.random()*3)];
+  s.style.left=(Math.random()*38-6)+'px';
+  s.style.top=(Math.random()*6-8)+'px';
+  el.appendChild(s);
+  setTimeout(()=>s.remove(),700);
+}
+function startSparkles(){if(sparkleIv)return;sparkleIv=setInterval(()=>{document.querySelectorAll('.mc.cel').forEach(spawnSparkle);},320);}
+function stopSparkles(){clearInterval(sparkleIv);sparkleIv=null;}
 
 // ─── 유틸 ───
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
@@ -545,8 +564,8 @@ function getMiniPosition(pid, answer){
     // X 영역: 60%~96%, 5열 → 60,68,76,84,92
     leftPct=60+col*8;
   } else {
-    // 중앙 대기: 40%~48%에 약간 분산
-    leftPct=40+col*2;
+    // 중앙 대기: 중앙 정렬 (42~58%, 중심 50%)
+    leftPct=42+col*4;
   }
   return{left:leftPct+'%', top:topPct+'%'};
 }
@@ -658,6 +677,20 @@ function subHostGame(){
     $('btnNext').style.display=phase==='reveal'?'inline-block':'none';
     $('btnNext').textContent=currentQ+1>=totalQ?'🏆 결과 보기':'다음 문제 →';
 
+    // 정답 공개 배너
+    const revBanner=$('revealBanner');
+    if(phase==='reveal'){
+      const ca=qObj.a?'O':'X';
+      revBanner.style.display='block';
+      revBanner.style.background=ca==='O'?'rgba(76,175,80,.3)':'rgba(244,67,54,.3)';
+      revBanner.style.borderColor=ca==='O'?'#4CAF50':'#f44336';
+      revBanner.innerHTML=`<div style="font-size:3.8rem;line-height:1">${ca==='O'?'⭕':'❌'}</div><div style="font-size:1.1rem;font-weight:700;margin-top:6px;opacity:.9">정답은 <strong>${ca}</strong> 입니다!</div>`;
+      startSparkles();
+    } else {
+      revBanner.style.display='none';
+      stopSparkles();
+    }
+
     // 미니미 초기화 (문제 바뀔 때 DOM 재구성)
     if(players&&!document.getElementById('mc-'+Object.keys(players)[0])){
       initPositions(Object.keys(players));
@@ -707,7 +740,7 @@ window.revealAnswer=async()=>{
 };
 
 window.nextQuestion=async()=>{
-  // 새 문제 시작 시 미니미 DOM 초기화
+  stopSparkles();
   $('miniContainer').innerHTML='';
   const snap=await get(ref(db,`rooms/${roomCode}`));
   const d=snap.val();
@@ -724,7 +757,7 @@ window.nextQuestion=async()=>{
 };
 
 function showHostResult(players,totalQ){
-  clearInterval(timerIv);show('scrHostResult');
+  clearInterval(timerIv);stopSparkles();show('scrHostResult');
   if(!players)return;
   const list=Object.values(players).sort((a,b)=>(b.score||0)-(a.score||0));
   const perfects=list.filter(p=>p.perfect);
@@ -759,7 +792,7 @@ window.closeConfirm=()=>{$('confirmOverlay').style.display='none';};
 window.resetGame=async()=>{
   $('confirmOverlay').style.display='none';
   if(roomCode)await remove(ref(db,`rooms/${roomCode}`));
-  if(gameUnsub)gameUnsub();clearInterval(timerIv);
+  if(gameUnsub)gameUnsub();clearInterval(timerIv);stopSparkles();
   roomCode='';sport=null;qCount=10;playerPositions={};prevAnswers={};
   document.querySelectorAll('.sp-btn,.cnt-btn').forEach(b=>b.classList.remove('sel'));
   show('scrHostSetup');
