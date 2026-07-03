@@ -200,17 +200,21 @@ label{display:block;color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:7
 <!-- 선생님: 대기실 -->
 <div id="scrHostLobby" class="screen">
 <div class="center">
-  <div class="title"><span style="-webkit-text-fill-color:initial">📡</span> 대기실</div>
-  <div class="room-box">
-    <div style="color:rgba(255,255,255,.5);font-size:.85rem;margin-bottom:6px;">방 코드</div>
-    <div class="room-code" id="dispCode">----</div>
-    <div style="color:rgba(255,255,255,.45);font-size:.8rem;margin-top:6px;">학생들에게 이 코드를 알려주세요</div>
+  <div class="title" style="margin-bottom:10px;"><span style="-webkit-text-fill-color:initial">📡</span> 대기실</div>
+  <div style="display:flex;align-items:center;gap:16px;width:100%;max-width:420px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);border-radius:16px;padding:14px 18px;">
+    <div id="qrBox" style="flex-shrink:0;"></div>
+    <div style="text-align:left;min-width:0;">
+      <div style="color:rgba(255,255,255,.55);font-size:.78rem;margin-bottom:2px;">방 코드</div>
+      <div class="room-code" id="dispCode" style="font-size:2.8rem;letter-spacing:.12em;">----</div>
+      <div style="color:rgba(255,255,255,.45);font-size:.72rem;margin-top:4px;line-height:1.3;">학생들에게 이 코드를<br>알려주세요</div>
+    </div>
   </div>
-  <div id="qrBox" style="margin:8px 0;"></div>
-  <div class="sub">참가 <span id="pCount">0</span>명</div>
+  <div class="sub" style="margin:10px 0 4px;">참가 <span id="pCount">0</span>명</div>
   <div class="player-list" id="lobbyList"></div>
-  <button class="btn btn-pri" style="font-size:1.1rem;padding:15px 40px;" onclick="startGame()">▶ 게임 시작!</button>
-  <button class="btn btn-ghost" style="margin-top:10px;" onclick="confirmReset()">❌ 방 닫기</button>
+  <div style="display:flex;gap:10px;margin-top:10px;width:100%;max-width:360px;">
+    <button class="btn btn-ghost" style="white-space:nowrap;padding:14px 18px;font-size:.95rem;" onclick="confirmReset()">❌ 방 닫기</button>
+    <button class="btn btn-pri" style="flex:1;white-space:nowrap;font-size:1.05rem;padding:14px 0;" onclick="startGame()">▶ 게임 시작!</button>
+  </div>
 </div>
 </div>
 
@@ -687,7 +691,7 @@ window.createRoom=async()=>{
   $('dispCode').textContent=roomCode;
   $('qrBox').innerHTML='';
   const url=`${location.origin}${location.pathname}?room=${roomCode}`;
-  if(window.QRCode)new QRCode($('qrBox'),{text:url,width:150,height:150,colorDark:'#fff',colorLight:'#302b63',correctLevel:QRCode.CorrectLevel.M});
+  if(window.QRCode)new QRCode($('qrBox'),{text:url,width:110,height:110,colorDark:'#f093fb',colorLight:'rgba(30,20,50,0)',correctLevel:QRCode.CorrectLevel.M});
   onValue(ref(db,`rooms/${roomCode}/players`),snap=>{
     const ps=snap.val()||{};const list=Object.values(ps);
     $('pCount').textContent=list.length;
