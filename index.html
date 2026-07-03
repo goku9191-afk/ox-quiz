@@ -28,9 +28,9 @@ label{display:block;color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:7
 .mode-btn:hover{border-color:#f093fb;background:rgba(240,147,251,.12);transform:translateY(-4px);}
 .mode-icon{font-size:2.8rem;display:block;margin-bottom:10px;}
 
-.sport-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0;width:100%;max-width:420px;}
-.sp-btn{padding:18px 8px;border:2px solid rgba(255,255,255,.18);border-radius:14px;background:rgba(255,255,255,.05);color:#fff;cursor:pointer;font-size:.85rem;font-weight:700;transition:all .18s;}
-.sp-btn .sp-em{font-size:1.9rem;display:block;margin-bottom:5px;}
+.sport-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0;width:100%;max-width:420px;}
+.sp-btn{padding:13px 8px;border:2px solid rgba(255,255,255,.18);border-radius:14px;background:rgba(255,255,255,.05);color:#fff;cursor:pointer;font-size:.85rem;font-weight:700;transition:all .18s;}
+.sp-btn .sp-em{font-size:1.6rem;display:block;margin-bottom:4px;}
 .sp-btn.sel{border-color:#f093fb;background:rgba(240,147,251,.18);}
 .cnt-grid{display:flex;gap:10px;justify-content:center;margin:14px 0;}
 .cnt-btn{padding:12px 22px;border:2px solid rgba(255,255,255,.18);border-radius:50px;background:rgba(255,255,255,.05);color:#fff;cursor:pointer;font-size:1rem;font-weight:700;transition:all .18s;}
@@ -175,8 +175,9 @@ label{display:block;color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:7
 <!-- 선생님: 설정 -->
 <div id="scrHostSetup" class="screen">
 <div class="center">
-  <div class="title"><span style="-webkit-text-fill-color:initial">🎮</span> 게임 설정</div>
-  <div class="sub">종목 선택</div>
+  <button class="btn btn-ghost" style="align-self:flex-start;margin-bottom:10px;padding:7px 16px;font-size:.85rem;" onclick="show('scrMode')">← 뒤로</button>
+  <div class="title" style="margin-bottom:4px;"><span style="-webkit-text-fill-color:initial">🎮</span> 게임 설정</div>
+  <div class="sub" style="margin-bottom:12px;">종목 선택</div>
   <div class="sport-grid">
     <div class="sp-btn" onclick="selSport('volleyball',this)"><span class="sp-em">🏐</span>배구</div>
     <div class="sp-btn" onclick="selSport('soccer',this)"><span class="sp-em">⚽</span>축구</div>
@@ -184,14 +185,13 @@ label{display:block;color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:7
     <div class="sp-btn" onclick="selSport('badminton',this)"><span class="sp-em">🏸</span>배드민턴</div>
     <div class="sp-btn" onclick="selSport('golf',this)"><span class="sp-em">⛳</span>골프</div>
   </div>
-  <div class="sub" style="margin-top:10px">문제 수</div>
-  <div class="cnt-grid">
+  <div class="sub" style="margin-top:8px;margin-bottom:10px;">문제 수</div>
+  <div class="cnt-grid" style="margin:0;">
     <div class="cnt-btn" onclick="selCount(10,this)">10개</div>
     <div class="cnt-btn" onclick="selCount(20,this)">20개</div>
     <div class="cnt-btn" onclick="selCount(30,this)">30개</div>
   </div>
-  <button class="btn btn-pri" style="margin-top:16px;font-size:1.1rem;padding:15px 40px;" onclick="createRoom()">🚀 방 만들기</button>
-  <button class="btn btn-ghost" style="margin-top:10px;" onclick="show('scrMode')">← 뒤로</button>
+  <button class="btn btn-pri" style="margin-top:14px;font-size:1.1rem;padding:15px 40px;" onclick="createRoom()">🚀 방 만들기</button>
 </div>
 </div>
 
