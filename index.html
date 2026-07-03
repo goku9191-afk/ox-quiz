@@ -175,7 +175,6 @@ label{display:block;color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:7
 <!-- 선생님: 설정 -->
 <div id="scrHostSetup" class="screen">
 <div class="center">
-  <button class="btn btn-ghost" style="align-self:flex-start;margin-bottom:10px;padding:7px 16px;font-size:.85rem;" onclick="show('scrMode')">← 뒤로</button>
   <div class="title" style="margin-bottom:4px;"><span style="-webkit-text-fill-color:initial">🎮</span> 게임 설정</div>
   <div class="sub" style="margin-bottom:12px;">종목 선택</div>
   <div class="sport-grid">
@@ -191,7 +190,10 @@ label{display:block;color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:7
     <div class="cnt-btn" onclick="selCount(20,this)">20개</div>
     <div class="cnt-btn" onclick="selCount(30,this)">30개</div>
   </div>
-  <button class="btn btn-pri" style="margin-top:14px;font-size:1.1rem;padding:15px 40px;" onclick="createRoom()">🚀 방 만들기</button>
+  <div style="display:flex;gap:10px;margin-top:14px;">
+    <button class="btn btn-ghost" style="flex:1;font-size:1rem;padding:15px 0;" onclick="show('scrMode')">← 뒤로</button>
+    <button class="btn btn-pri" style="flex:2;font-size:1.1rem;padding:15px 0;" onclick="createRoom()">🚀 방 만들기</button>
+  </div>
 </div>
 </div>
 
