@@ -720,7 +720,7 @@ function subHostGame(){
       revBanner.style.display='block';
       revBanner.style.background=ca==='O'?'rgba(76,175,80,.3)':'rgba(244,67,54,.3)';
       revBanner.style.borderColor=ca==='O'?'#4CAF50':'#f44336';
-      revBanner.innerHTML=`<div style="font-size:3.8rem;line-height:1">${ca==='O'?'⭕':'❌'}</div><div style="font-size:1.1rem;font-weight:700;margin-top:6px;opacity:.9">정답은 <strong>${ca}</strong> 입니다!</div>`;
+      revBanner.innerHTML=`<div style="font-size:3.8rem;line-height:1">${ca==='O'?'⭕':'❌'}</div><div style="font-size:1.1rem;font-weight:700;margin-top:6px;opacity:.9">정답은 <strong>${ca}</strong> 입니다!</div>`+(qObj.e?`<div style="margin-top:8px;font-size:.9rem;opacity:.85;line-height:1.5;">💡 ${qObj.e}</div>`:'');
       startSparkles();
     } else {
       revBanner.style.display='none';
